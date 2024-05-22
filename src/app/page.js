@@ -1,95 +1,77 @@
-import Image from "next/image";
+'use client'
 import styles from "./page.module.css";
+import React, { useState, useEffect } from "react";
+import { CgMathPlus } from "react-icons/cg";
+import CardTarefa from "@/components/cardtarefa";
 
 export default function Home() {
+  const [inputTarefa, setInputTarefa] = useState("");
+  const [tarefas, setTarefas] = useState([])
+  const url = "http://localhost:8000/tarefas";
+
+  const getAllTarefas = async () => {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      setTarefas(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const adicionarTarefa = async () => {
+    const data = {
+      "descricao": inputTarefa,
+      "estaFeita": false
+    }
+    if (inputTarefa.trim().length > 0) {
+      try {
+        const response = await fetch(url, 
+          {
+            method: 'POST',
+            headers: 
+              {
+                'Content-Type': 'application/json',
+              },
+            body: JSON.stringify(data)
+          }
+        );
+        if (!response.ok){
+          throw new Error('Erro ao adicionar tarefa');
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setInputTarefa("");
+        await getAllTarefas();
+      }
+    } else {
+      alert("É necessário dar um nome a tarefa!");
+    }
+  }
+
+  useEffect(() => {
+    getAllTarefas()
+  }, []);
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+      <section className={styles.section}>
+        <div className={styles.caixaTodo}>
+          <h1 className={styles.h1}>TODO List</h1>
+          <div className={styles.caixaDeInput}>
+            <input className={styles.input} value={inputTarefa} onChange={(e) => setInputTarefa(e.target.value)} />
+            <button className={styles.button} onClick={adicionarTarefa}> <CgMathPlus  className={styles.iconAdd} /> </button>
+          </div>
+          <ul className={styles.ul}>
+            {tarefas && tarefas.map((tarefa, index) =>
+              <li className={styles.li}>
+                <CardTarefa key={index} id={tarefa.id} getAllTarefas={getAllTarefas} />
+              </li>
+            )}
+          </ul>
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      </section>
     </main>
   );
 }
